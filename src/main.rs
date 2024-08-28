@@ -1,6 +1,9 @@
 use poise::serenity_prelude as serenity;
+use sqlx::SqlitePool;
 
-struct Data {}
+struct Data {
+	db: SqlitePool,
+}
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
 
@@ -19,6 +22,15 @@ async fn age(
 async fn main() {
 	dotenv::dotenv().ok();
 
+	let database_url = std::env::var("DATABASE_URL").unwrap_or("sqlite:data.sqlite".to_string());
+	let database_pool = SqlitePool::connect(&database_url)
+		.await
+		.expect("Could not create database connection");
+	sqlx::migrate!()
+		.run(&database_pool)
+		.await
+		.expect("Failed to run database migrations");
+
 	let token = std::env::var("DISCORD_TOKEN").expect("missing DISCORD_TOKEN");
 	let intents = serenity::GatewayIntents::non_privileged();
 
@@ -30,7 +42,7 @@ async fn main() {
 		.setup(|ctx, _ready, framework| {
 			Box::pin(async move {
 				poise::builtins::register_globally(ctx, &framework.options().commands).await?;
-				Ok(Data {})
+				Ok(Data { db: database_pool })
 			})
 		})
 		.build();
