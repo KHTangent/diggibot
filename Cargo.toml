@@ -4,3 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+dotenv = "0.15.0"
+env_logger = "0.11.5"
+
+[dependencies.poise]
+version = "0.6.1"
+ 
+[dependencies.tokio]
+version = "1.39.3"
+features = ["rt-multi-thread"]
