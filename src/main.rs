@@ -1,22 +1,16 @@
 use poise::serenity_prelude as serenity;
 use sqlx::SqlitePool;
 
+mod leeting;
+mod models;
+
+use leeting::setup_leet;
+
 struct Data {
 	db: SqlitePool,
 }
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
-
-#[poise::command(slash_command)]
-async fn age(
-	ctx: Context<'_>,
-	#[description = "Selected user"] user: Option<serenity::User>,
-) -> Result<(), Error> {
-	let u = user.as_ref().unwrap_or_else(|| ctx.author());
-	let response = format!("{}'s account was created at {}", u.name, u.created_at());
-	ctx.say(response).await?;
-	Ok(())
-}
 
 #[tokio::main]
 async fn main() {
@@ -36,7 +30,7 @@ async fn main() {
 
 	let framework = poise::Framework::builder()
 		.options(poise::FrameworkOptions {
-			commands: vec![age()],
+			commands: vec![setup_leet()],
 			..Default::default()
 		})
 		.setup(|ctx, _ready, framework| {
