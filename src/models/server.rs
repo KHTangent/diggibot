@@ -11,7 +11,7 @@ pub struct LeetSetup {
 	guild_id: String,
 	timezone: String,
 	leaderboard_channel: String,
-	leaderboard_count: String,
+	leaderboard_count: i64,
 	accept_emoji: String,
 	deny_emoji: String,
 	repeat_emoji: String,
