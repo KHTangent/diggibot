@@ -22,6 +22,15 @@ pub async fn setup_leet(
 	#[description = "Time zone to use, e.g. Europe/Oslo"] timezone: String,
 	#[description = "Channel to post leeterboard to"] channel: serenity::Channel,
 ) -> Result<(), Error> {
+	let guild_id_string = format!("{}", ctx.guild_id().unwrap().get());
+	let server = Server::get_or_create(&ctx.data().db, &guild_id_string).await?;
+
+	let old_setup = server.get_leet_setup(&ctx.data().db).await.map_err(|_| "Error reaching database")?;
+	if old_setup.is_some() {
+		ctx.say("Leet has already been configured").await?;
+		return Ok(());
+	}
+
 	let accept_emoji_parsed = get_emoji_id_or_name(ctx, &accept_emoji)
 		.await
 		.ok_or("Invalid accept emoji given. Must be a default emoji, or from this server")?;
@@ -35,10 +44,7 @@ pub async fn setup_leet(
 	let timezone_parsed =
 		Tz::from_str_insensitive(&timezone).map_err(|_| "Invalid time zone given")?;
 
-	let guild_id_string = format!("{}", ctx.guild_id().unwrap().get());
 	let channel_id_string = format!("{}", channel.id().get());
-
-	let server = Server::get_or_create(&ctx.data().db, &guild_id_string).await?;
 
 	server
 		.setup_leet(

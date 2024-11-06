@@ -8,13 +8,13 @@ pub struct Server {
 
 #[derive(Debug, sqlx::FromRow)]
 pub struct LeetSetup {
-	guild_id: String,
-	timezone: String,
-	leaderboard_channel: String,
-	leaderboard_count: i64,
-	accept_emoji: String,
-	deny_emoji: String,
-	repeat_emoji: String,
+	pub guild_id: String,
+	pub timezone: String,
+	pub leaderboard_channel: String,
+	pub leaderboard_count: i64,
+	pub accept_emoji: String,
+	pub deny_emoji: String,
+	pub repeat_emoji: String,
 }
 
 impl Server {
@@ -54,6 +54,19 @@ impl Server {
 			return Server::create(pool, guild_id).await;
 		}
 		Ok(server.unwrap())
+	}
+
+	pub async fn get_leet_setup(&self, pool: &SqlitePool) -> Result<Option<LeetSetup>> {
+		let found_or_none = sqlx::query_as!(
+			LeetSetup,
+			r#"
+			SELECT *
+			FROM leet_setups
+			WHERE guild_id = ?
+			"#,
+			self.guild_id
+		).fetch_optional(pool).await?;
+		Ok(found_or_none)
 	}
 
 	pub async fn setup_leet(
