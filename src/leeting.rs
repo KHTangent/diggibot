@@ -13,7 +13,11 @@ async fn get_emoji_id_or_name(ctx: Context<'_>, emoji: &str) -> Option<String> {
 	Some(format!("<:{}:{}>", emoji_parsed.name, emoji_parsed.id))
 }
 
-#[poise::command(slash_command, guild_only)]
+#[poise::command(
+	slash_command,
+	guild_only,
+	required_permissions = "MANAGE_MESSAGES",
+)]
 pub async fn setup_leet(
 	ctx: Context<'_>,
 	#[description = "Emoji for accepted leet"] accept_emoji: String,
