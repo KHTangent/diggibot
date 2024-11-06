@@ -34,7 +34,7 @@ impl Server {
 	}
 
 	pub async fn get(pool: &SqlitePool, guild_id: &String) -> Result<Option<Self>> {
-		Ok(sqlx::query_as!(
+		let found_server_or_none = sqlx::query_as!(
 			Server,
 			r#"
 			SELECT guild_id
@@ -44,7 +44,16 @@ impl Server {
 			guild_id
 		)
 		.fetch_optional(pool)
-		.await?)
+		.await?;
+		Ok(found_server_or_none)
+	}
+
+	pub async fn get_or_create(pool: &SqlitePool, guild_id: &String) -> Result<Self> {
+		let server = Server::get(pool, guild_id).await?;
+		if server.is_none() {
+			return Server::create(pool, guild_id).await;
+		}
+		Ok(server.unwrap())
 	}
 
 	pub async fn setup_leet(
@@ -56,6 +65,29 @@ impl Server {
 		accept_emoji: &String,
 		deny_emoji: &String,
 		repeat_emoji: &String,
-	) {
+	) -> Result<()> {
+		sqlx::query!(
+			r#"
+			INSERT INTO leet_setups(
+				guild_id,
+				timezone,
+				leaderboard_channel,
+				leaderboard_count,
+				accept_emoji,
+				deny_emoji,
+				repeat_emoji
+			) VALUES (?, ?, ?, ?, ?, ?, ?)
+			"#,
+			self.guild_id,
+			timezone,
+			leaderboard_channel,
+			leaderboard_count,
+			accept_emoji,
+			deny_emoji,
+			repeat_emoji
+		)
+		.execute(pool)
+		.await?;
+		Ok(())
 	}
 }

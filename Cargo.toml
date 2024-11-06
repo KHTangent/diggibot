@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.89"
+chrono = "0.4.38"
 dotenv = "0.15.0"
 emojis = "0.6.4"
 env_logger = "0.11.5"
@@ -23,3 +24,8 @@ features = ["rt-multi-thread"]
 [dependencies.sqlx]
 version = "0.8"
 features = ["runtime-tokio", "sqlite", "migrate", "derive"]
+
+[dependencies.chrono-tz]
+version = "0.10"
+features = ["std", "case-insensitive"]
+

@@ -1,9 +1,9 @@
-use crate::{Context, Error};
+use crate::{models::server::Server, Context, Error};
 use ::serenity::all::{ArgumentConvert, Emoji};
+use chrono_tz::Tz;
 use poise::serenity_prelude::{self as serenity};
 
 async fn get_emoji_id_or_name(ctx: Context<'_>, emoji: &str) -> Option<String> {
-	println!("Attempting to parse: {}", emoji);
 	if emojis::get(emoji).is_some() {
 		return Some(emoji.to_string());
 	}
@@ -13,7 +13,7 @@ async fn get_emoji_id_or_name(ctx: Context<'_>, emoji: &str) -> Option<String> {
 	Some(format!("<:{}:{}>", emoji_parsed.name, emoji_parsed.id))
 }
 
-#[poise::command(slash_command)]
+#[poise::command(slash_command, guild_only)]
 pub async fn setup_leet(
 	ctx: Context<'_>,
 	#[description = "Emoji for accepted leet"] accept_emoji: String,
@@ -31,10 +31,27 @@ pub async fn setup_leet(
 	let repeated_emoji_parsed = get_emoji_id_or_name(ctx, &repeat_emoji)
 		.await
 		.ok_or("Invalid repeated emoji given. Must be a default emoji, or from this server")?;
-	ctx.say(format!(
-		"Using emojis {}, {}, and {}",
-		accept_emoji_parsed, invalid_emoji_parsed, repeated_emoji_parsed
-	))
-	.await?;
+
+	let timezone_parsed =
+		Tz::from_str_insensitive(&timezone).map_err(|_| "Invalid time zone given")?;
+
+	let guild_id_string = format!("{}", ctx.guild_id().unwrap().get());
+	let channel_id_string = format!("{}", channel.id().get());
+
+	let server = Server::get_or_create(&ctx.data().db, &guild_id_string).await?;
+
+	server
+		.setup_leet(
+			&ctx.data().db,
+			&timezone_parsed.to_string(),
+			&channel_id_string,
+			15,
+			&accept_emoji_parsed,
+			&invalid_emoji_parsed,
+			&repeated_emoji_parsed,
+		)
+		.await?;
+
+	ctx.say("Leet set up successfully").await?;
 	Ok(())
 }
