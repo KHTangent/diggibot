@@ -4,7 +4,7 @@ use sqlx::SqlitePool;
 mod leeting;
 mod models;
 
-use leeting::setup_leet;
+use leeting::{is_leet_message, setup_leet};
 
 struct Data {
 	db: SqlitePool,
@@ -26,11 +26,15 @@ async fn main() {
 		.expect("Failed to run database migrations");
 
 	let token = std::env::var("DISCORD_TOKEN").expect("missing DISCORD_TOKEN");
-	let intents = serenity::GatewayIntents::non_privileged();
+	let intents =
+		serenity::GatewayIntents::non_privileged() | serenity::GatewayIntents::MESSAGE_CONTENT;
 
 	let framework = poise::Framework::builder()
 		.options(poise::FrameworkOptions {
 			commands: vec![setup_leet()],
+			event_handler: |ctx, event, framework, data| {
+				Box::pin(event_handler(ctx, event, framework, data))
+			},
 			..Default::default()
 		})
 		.setup(|ctx, _ready, framework| {
@@ -45,4 +49,24 @@ async fn main() {
 		.framework(framework)
 		.await;
 	client.unwrap().start().await.unwrap();
+}
+
+async fn event_handler(
+	ctx: &serenity::Context,
+	event: &serenity::FullEvent,
+	_framework: poise::FrameworkContext<'_, Data, Error>,
+	data: &Data,
+) -> Result<(), Error> {
+	match event {
+		serenity::FullEvent::Ready { data_about_bot, .. } => {
+			println!("Logged in as {}", data_about_bot.user.name);
+		}
+		serenity::FullEvent::Message { new_message } => {
+			if is_leet_message(&new_message.content) {
+				// Todo
+			}
+		}
+		_ => {}
+	}
+	Ok(())
 }

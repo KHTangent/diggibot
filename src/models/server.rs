@@ -65,7 +65,9 @@ impl Server {
 			WHERE guild_id = ?
 			"#,
 			self.guild_id
-		).fetch_optional(pool).await?;
+		)
+		.fetch_optional(pool)
+		.await?;
 		Ok(found_or_none)
 	}
 

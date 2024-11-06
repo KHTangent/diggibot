@@ -1,7 +1,15 @@
 use crate::{models::server::Server, Context, Error};
 use ::serenity::all::{ArgumentConvert, Emoji};
 use chrono_tz::Tz;
+use once_cell::sync::Lazy;
 use poise::serenity_prelude::{self as serenity};
+use regex::Regex;
+
+pub fn is_leet_message(message: &str) -> bool {
+	let leet_regex = Lazy::new(|| Regex::new(r"(?i)(^|[^a-z])leet($|[^a-z])").unwrap());
+
+	leet_regex.is_match(message)
+}
 
 async fn get_emoji_id_or_name(ctx: Context<'_>, emoji: &str) -> Option<String> {
 	if emojis::get(emoji).is_some() {
@@ -13,11 +21,7 @@ async fn get_emoji_id_or_name(ctx: Context<'_>, emoji: &str) -> Option<String> {
 	Some(format!("<:{}:{}>", emoji_parsed.name, emoji_parsed.id))
 }
 
-#[poise::command(
-	slash_command,
-	guild_only,
-	required_permissions = "MANAGE_MESSAGES",
-)]
+#[poise::command(slash_command, guild_only, required_permissions = "MANAGE_MESSAGES")]
 pub async fn setup_leet(
 	ctx: Context<'_>,
 	#[description = "Emoji for accepted leet"] accept_emoji: String,
@@ -29,7 +33,10 @@ pub async fn setup_leet(
 	let guild_id_string = format!("{}", ctx.guild_id().unwrap().get());
 	let server = Server::get_or_create(&ctx.data().db, &guild_id_string).await?;
 
-	let old_setup = server.get_leet_setup(&ctx.data().db).await.map_err(|_| "Error reaching database")?;
+	let old_setup = server
+		.get_leet_setup(&ctx.data().db)
+		.await
+		.map_err(|_| "Error reaching database")?;
 	if old_setup.is_some() {
 		ctx.say("Leet has already been configured").await?;
 		return Ok(());
