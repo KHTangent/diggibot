@@ -539,6 +539,7 @@ dependencies = [
  "dotenv",
  "emojis",
  "env_logger",
+ "log",
  "once_cell",
  "poise",
  "regex",

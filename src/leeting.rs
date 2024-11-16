@@ -1,6 +1,10 @@
-use crate::{models::server::Server, Context, Error};
-use ::serenity::all::{ArgumentConvert, Emoji};
+use std::str::FromStr;
+
+use crate::{models::server::Server, Context, Data, Error};
+use ::serenity::all::{ArgumentConvert, Emoji, Message, ReactionType};
+use chrono::Timelike;
 use chrono_tz::Tz;
+use log::info;
 use once_cell::sync::Lazy;
 use poise::serenity_prelude::{self as serenity};
 use regex::Regex;
@@ -70,5 +74,41 @@ pub async fn setup_leet(
 		.await?;
 
 	ctx.say("Leet set up successfully").await?;
+	Ok(())
+}
+
+pub async fn handle_leet_message(
+	ctx: &serenity::Context,
+	event: &serenity::FullEvent,
+	data: &Data,
+	message: &Message,
+) -> Result<(), Error> {
+	if message.guild_id.is_none() {
+		info!("No guild");
+		return Ok(());
+	}
+	let guild = Server::get_or_create(&data.db, &message.guild_id.unwrap().to_string()).await?;
+	let leet_setup = match guild.get_leet_setup(&data.db).await? {
+		Some(setup) => setup,
+		None => return Ok(()),
+	};
+	let configured_timezone = Tz::from_str(&leet_setup.timezone)
+		.map_err(|_| format!("Invalid timezone {}", &leet_setup.timezone))?;
+	let message_local_timestamp = message.timestamp.with_timezone(&configured_timezone);
+
+	match (
+		message_local_timestamp.hour(),
+		message_local_timestamp.minute(),
+	) {
+		(13, 37) => todo!(),
+		(_, _) => message
+			.react(
+				ctx,
+				ReactionType::try_from(leet_setup.deny_emoji.as_str())
+					.map_err(|_| "Failed to get deny emoji")?,
+			)
+			.await
+			.map_err(|_| "Failed to add reaction")?,
+	};
 	Ok(())
 }
