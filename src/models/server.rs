@@ -17,6 +17,15 @@ pub struct LeetSetup {
 	pub repeat_emoji: String,
 }
 
+#[derive(Debug, sqlx::FromRow)]
+pub struct Leet {
+	pub guild_id: String,
+	pub user_id: String,
+	pub day: i64,
+	pub month: i64,
+	pub year: i64,
+}
+
 impl Server {
 	pub async fn create(pool: &SqlitePool, guild_id: &String) -> Result<Self> {
 		let created = sqlx::query_as!(
@@ -100,6 +109,56 @@ impl Server {
 			accept_emoji,
 			deny_emoji,
 			repeat_emoji
+		)
+		.execute(pool)
+		.await?;
+		Ok(())
+	}
+
+	pub async fn get_leet(
+		&self,
+		pool: &SqlitePool,
+		user_id: &str,
+		day: i64,
+		month: i64,
+		year: i64,
+	) -> Result<Option<Leet>> {
+		let leet = sqlx::query_as!(
+			Leet,
+			r#"
+			SELECT *
+			FROM leets
+			WHERE guild_id = ? AND user_id = ? AND day = ? AND month = ? AND year = ?
+			"#,
+			self.guild_id,
+			user_id,
+			day,
+			month,
+			year
+		)
+		.fetch_optional(pool)
+		.await?;
+		Ok(leet)
+	}
+
+	pub async fn add_leet(
+		&self,
+		pool: &SqlitePool,
+		user_id: &str,
+		day: i64,
+		month: i64,
+		year: i64,
+	) -> Result<()> {
+		sqlx::query!(
+			r#"
+			INSERT INTO leets(guild_id, user_id, day, month, year)
+			VALUES (?, ?, ?, ?, ?)
+			"#,
+			self.guild_id,
+			user_id,
+			day,
+			month,
+			year
 		)
 		.execute(pool)
 		.await?;

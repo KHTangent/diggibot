@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use crate::{models::server::Server, Context, Data, Error};
 use ::serenity::all::{ArgumentConvert, Emoji, Message, ReactionType};
-use chrono::Timelike;
+use chrono::{Datelike, Timelike};
 use chrono_tz::Tz;
 use log::info;
 use once_cell::sync::Lazy;
@@ -79,7 +79,7 @@ pub async fn setup_leet(
 
 pub async fn handle_leet_message(
 	ctx: &serenity::Context,
-	event: &serenity::FullEvent,
+	_event: &serenity::FullEvent,
 	data: &Data,
 	message: &Message,
 ) -> Result<(), Error> {
@@ -100,15 +100,59 @@ pub async fn handle_leet_message(
 		message_local_timestamp.hour(),
 		message_local_timestamp.minute(),
 	) {
-		(13, 37) => todo!(),
-		(_, _) => message
-			.react(
-				ctx,
-				ReactionType::try_from(leet_setup.deny_emoji.as_str())
-					.map_err(|_| "Failed to get deny emoji")?,
-			)
-			.await
-			.map_err(|_| "Failed to add reaction")?,
+		(13, 37) => {
+			let user_id = &message.author.id.to_string();
+			let leet = guild
+				.get_leet(
+					&data.db,
+					&user_id,
+					message_local_timestamp.day().into(),
+					message_local_timestamp.month().into(),
+					message_local_timestamp.year().into(),
+				)
+				.await?;
+			match leet {
+				Some(_) => {
+					message
+						.react(
+							ctx,
+							ReactionType::try_from(leet_setup.repeat_emoji.as_str())
+								.map_err(|_| "Failed to get repeat emoji")?,
+						)
+						.await
+						.map_err(|_| "Failed to add reaction")?;
+				}
+				None => {
+					guild
+						.add_leet(
+							&data.db,
+							&user_id,
+							message_local_timestamp.day().into(),
+							message_local_timestamp.month().into(),
+							message_local_timestamp.year().into(),
+						)
+						.await?;
+					message
+						.react(
+							ctx,
+							ReactionType::try_from(leet_setup.accept_emoji.as_str())
+								.map_err(|_| "Failed to get accept_emoji emoji")?,
+						)
+						.await
+						.map_err(|_| "Failed to add reaction")?;
+				}
+			}
+		}
+		(_, _) => {
+			message
+				.react(
+					ctx,
+					ReactionType::try_from(leet_setup.deny_emoji.as_str())
+						.map_err(|_| "Failed to get deny emoji")?,
+				)
+				.await
+				.map_err(|_| "Failed to add reaction")?;
+		}
 	};
 	Ok(())
 }

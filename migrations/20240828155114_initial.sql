@@ -17,5 +17,7 @@ CREATE TABLE leet_setups (
 CREATE TABLE leets (
 	guild_id TEXT NOT NULL REFERENCES servers(guild_id) ON DELETE CASCADE,
 	user_id TEXT NOT NULL,
-	timestamp INTEGER NOT NULL
+	day INTEGER NOT NULL,
+	month INTEGER NOT NULL,
+	year INTEGER NOT NULL
 );
