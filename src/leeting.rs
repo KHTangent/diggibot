@@ -1,13 +1,7 @@
 use std::str::FromStr;
 
-use crate::{
-	models::server::{LeaderboardEntry, Server},
-	Context, Data, Error,
-};
-use ::serenity::{
-	all::{ArgumentConvert, CreateAllowedMentions, Emoji, Message, ReactionType},
-	FutureExt,
-};
+use crate::{models::server::Server, Context, Data, Error};
+use ::serenity::all::{ArgumentConvert, CreateAllowedMentions, Emoji, Message, ReactionType};
 use chrono::{Datelike, Timelike};
 use chrono_tz::Tz;
 use log::info;
@@ -114,7 +108,7 @@ pub async fn leeterboard(ctx: Context<'_>) -> Result<(), Error> {
 			place += 1;
 			format!("- {}: <@{}>, {} leets", place, e.user_id, e.count)
 		})
-		.take(20)
+		.take(leet_setup.leaderboard_count as usize)
 		.collect::<Vec<String>>()
 		.join("\n");
 	ctx.send(
