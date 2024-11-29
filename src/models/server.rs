@@ -26,6 +26,12 @@ pub struct Leet {
 	pub year: i64,
 }
 
+#[derive(Debug, sqlx::FromRow)]
+pub struct LeaderboardEntry {
+	pub user_id: String,
+	pub count: i64,
+}
+
 impl Server {
 	pub async fn create(pool: &SqlitePool, guild_id: &String) -> Result<Self> {
 		let created = sqlx::query_as!(
@@ -163,5 +169,29 @@ impl Server {
 		.execute(pool)
 		.await?;
 		Ok(())
+	}
+
+	pub async fn get_montly_leaderboard(
+		&self,
+		pool: &SqlitePool,
+		month: i64,
+		year: i64,
+	) -> Result<Vec<LeaderboardEntry>> {
+		let entries: Vec<LeaderboardEntry> = sqlx::query_as!(
+			LeaderboardEntry,
+			r#"
+			SELECT user_id, COUNT(*) as count
+			FROM leets
+			WHERE guild_id = ? AND month = ? AND year = ?
+			GROUP BY user_id
+			ORDER BY count DESC
+			"#,
+			self.guild_id,
+			month,
+			year
+		)
+		.fetch_all(pool)
+		.await?;
+		Ok(entries)
 	}
 }

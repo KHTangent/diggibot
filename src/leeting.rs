@@ -1,7 +1,13 @@
 use std::str::FromStr;
 
-use crate::{models::server::Server, Context, Data, Error};
-use ::serenity::all::{ArgumentConvert, Emoji, Message, ReactionType};
+use crate::{
+	models::server::{LeaderboardEntry, Server},
+	Context, Data, Error,
+};
+use ::serenity::{
+	all::{ArgumentConvert, CreateAllowedMentions, Emoji, Message, ReactionType},
+	FutureExt,
+};
 use chrono::{Datelike, Timelike};
 use chrono_tz::Tz;
 use log::info;
@@ -74,6 +80,49 @@ pub async fn setup_leet(
 		.await?;
 
 	ctx.say("Leet set up successfully").await?;
+	Ok(())
+}
+
+#[poise::command(slash_command, guild_only)]
+pub async fn leeterboard(ctx: Context<'_>) -> Result<(), Error> {
+	let guild_id_string = ctx.guild_id().unwrap().to_string();
+	let server = Server::get_or_create(&ctx.data().db, &guild_id_string).await?;
+	let leet_setup = server.get_leet_setup(&ctx.data().db).await?;
+	if leet_setup.is_none() {
+		ctx.say("No leeting enabled in this server").await?;
+		return Ok(());
+	}
+	let leet_setup = leet_setup.unwrap();
+	let configured_timezone = Tz::from_str(&leet_setup.timezone)
+		.map_err(|_| format!("Invalid timezone {}", &leet_setup.timezone))?;
+	let message_local_timestamp = ctx.created_at().with_timezone(&configured_timezone);
+	let leaderboard = server
+		.get_montly_leaderboard(
+			&ctx.data().db,
+			message_local_timestamp.month().into(),
+			message_local_timestamp.year().into(),
+		)
+		.await?;
+	if leaderboard.is_empty() {
+		ctx.say("No leets this month").await?;
+		return Ok(());
+	}
+	let mut place: u32 = 0;
+	let reply = leaderboard
+		.into_iter()
+		.map(|e| {
+			place += 1;
+			format!("- {}: <@{}>, {} leets", place, e.user_id, e.count)
+		})
+		.take(20)
+		.collect::<Vec<String>>()
+		.join("\n");
+	ctx.send(
+		poise::CreateReply::default()
+			.content(reply)
+			.allowed_mentions(CreateAllowedMentions::default().empty_users()),
+	)
+	.await?;
 	Ok(())
 }
 

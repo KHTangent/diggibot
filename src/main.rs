@@ -5,7 +5,7 @@ use sqlx::SqlitePool;
 mod leeting;
 mod models;
 
-use leeting::{handle_leet_message, is_leet_message, setup_leet};
+use leeting::{handle_leet_message, is_leet_message, leeterboard, setup_leet};
 
 struct Data {
 	db: SqlitePool,
@@ -36,7 +36,7 @@ async fn main() {
 
 	let framework = poise::Framework::builder()
 		.options(poise::FrameworkOptions {
-			commands: vec![setup_leet()],
+			commands: vec![setup_leet(), leeterboard()],
 			event_handler: |ctx, event, framework, data| {
 				Box::pin(event_handler(ctx, event, framework, data))
 			},
@@ -68,7 +68,7 @@ async fn event_handler(
 			info!("Logged in as {}", data_about_bot.user.name);
 		}
 		serenity::FullEvent::Message { new_message } => {
-			if is_leet_message(&new_message.content) {
+			if !new_message.author.bot && is_leet_message(&new_message.content) {
 				match handle_leet_message(ctx, event, data, &new_message).await {
 					Ok(_) => {}
 					Err(error) => warn!("Error handling leet message: {}", error),
