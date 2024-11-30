@@ -117,10 +117,18 @@ fn get_leaderboard_string(entries: &Vec<LeaderboardEntry>, max_count: usize) -> 
 		return String::from("No leets this month");
 	}
 	let mut place = 0;
+	let mut same_score_counter = 0;
+	let mut last_score = -1;
 	entries
 		.into_iter()
 		.map(|e| {
-			place += 1;
+			if last_score == e.count {
+				same_score_counter += 1;
+			} else {
+				place += same_score_counter + 1;
+				same_score_counter = 0;
+			}
+			last_score = e.count;
 			format!("- {}: <@{}>, {} leets", place, e.user_id, e.count)
 		})
 		.take(max_count)
