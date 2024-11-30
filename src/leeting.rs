@@ -1,7 +1,12 @@
-use std::str::FromStr;
+use std::{num::NonZero, str::FromStr};
 
-use crate::{models::server::Server, Context, Data, Error};
-use ::serenity::all::{ArgumentConvert, CreateAllowedMentions, Emoji, Message, ReactionType};
+use crate::{
+	models::server::{LeaderboardEntry, LeetSetup, Server},
+	Context, Data, Error,
+};
+use ::serenity::all::{
+	ArgumentConvert, CacheHttp, CreateAllowedMentions, Emoji, Message, ReactionType,
+};
 use chrono::{Datelike, Timelike};
 use chrono_tz::Tz;
 use log::info;
@@ -97,26 +102,75 @@ pub async fn leeterboard(ctx: Context<'_>) -> Result<(), Error> {
 			message_local_timestamp.year().into(),
 		)
 		.await?;
-	if leaderboard.is_empty() {
-		ctx.say("No leets this month").await?;
-		return Ok(());
-	}
-	let mut place: u32 = 0;
-	let reply = leaderboard
-		.into_iter()
-		.map(|e| {
-			place += 1;
-			format!("- {}: <@{}>, {} leets", place, e.user_id, e.count)
-		})
-		.take(leet_setup.leaderboard_count as usize)
-		.collect::<Vec<String>>()
-		.join("\n");
+	let reply = get_leaderboard_string(&leaderboard, leet_setup.leaderboard_count as usize);
 	ctx.send(
 		poise::CreateReply::default()
 			.content(reply)
 			.allowed_mentions(CreateAllowedMentions::default().empty_users()),
 	)
 	.await?;
+	Ok(())
+}
+
+fn get_leaderboard_string(entries: &Vec<LeaderboardEntry>, max_count: usize) -> String {
+	if entries.is_empty() {
+		return String::from("No leets this month");
+	}
+	let mut place = 0;
+	entries
+		.into_iter()
+		.map(|e| {
+			place += 1;
+			format!("- {}: <@{}>, {} leets", place, e.user_id, e.count)
+		})
+		.take(max_count)
+		.collect::<Vec<String>>()
+		.join("\n")
+}
+
+async fn post_one_leaderboard(
+	ctx: &serenity::Context,
+	data: &Data,
+	leet_setup: LeetSetup,
+) -> Result<(), Error> {
+	let server = Server::get(&data.db, &leet_setup.guild_id)
+		.await?
+		.ok_or("Server not found")?;
+	let configured_timezone = Tz::from_str(&leet_setup.timezone)
+		.map_err(|_| format!("Invalid timezone {}", &leet_setup.timezone))?;
+	let local_timestamp = chrono::Utc::now().with_timezone(&configured_timezone);
+	if local_timestamp.hour() != 13 || local_timestamp.minute() != 38 {
+		return Ok(());
+	}
+
+	let leaderboard = server
+		.get_montly_leaderboard(
+			&data.db,
+			local_timestamp.month().into(),
+			local_timestamp.year().into(),
+		)
+		.await?;
+	let channel_id: NonZero<u64> = leet_setup.leaderboard_channel.parse()?;
+	let channel_id = serenity::ChannelId::from(channel_id);
+	let reply = get_leaderboard_string(&leaderboard, leet_setup.leaderboard_count as usize);
+	channel_id
+		.send_message(
+			ctx.http(),
+			serenity::CreateMessage::default()
+				.content(reply)
+				.allowed_mentions(CreateAllowedMentions::default().empty_users()),
+		)
+		.await?;
+	Ok(())
+}
+
+pub async fn post_needed_leaderboards(ctx: &serenity::Context, data: &Data) -> Result<(), Error> {
+	let leet_setups = Server::get_all_leet_setups(&data.db).await?;
+
+	for leet_setup in leet_setups.into_iter() {
+		post_one_leaderboard(ctx, data, leet_setup).await.ok();
+	}
+
 	Ok(())
 }
 

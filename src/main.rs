@@ -1,3 +1,6 @@
+use std::time::Duration;
+
+use chrono::Timelike;
 use log::{info, warn};
 use poise::serenity_prelude as serenity;
 use sqlx::SqlitePool;
@@ -5,8 +8,11 @@ use sqlx::SqlitePool;
 mod leeting;
 mod models;
 
-use leeting::{handle_leet_message, is_leet_message, leeterboard, setup_leet};
+use leeting::{
+	handle_leet_message, is_leet_message, leeterboard, post_needed_leaderboards, setup_leet,
+};
 
+#[derive(Clone)]
 struct Data {
 	db: SqlitePool,
 }
@@ -57,6 +63,23 @@ async fn main() {
 	client.unwrap().start().await.unwrap();
 }
 
+fn start_ticker_task(ctx: &serenity::Context, data: &Data) {
+	info!("Starting leeterboard checks every minute");
+	let data = data.clone();
+	let ctx = ctx.clone();
+	tokio::spawn(async move {
+		let time_now = chrono::Utc::now();
+		// Always check xx:xx:01 so people know they had enought ime
+		let seconds_until_first_check: u64 = 61 - time_now.second() as u64;
+		tokio::time::sleep(Duration::from_secs(seconds_until_first_check)).await;
+		let mut interval = tokio::time::interval(Duration::from_secs(60));
+		loop {
+			interval.tick().await;
+			post_needed_leaderboards(&ctx, &data).await.ok();
+		}
+	});
+}
+
 async fn event_handler(
 	ctx: &serenity::Context,
 	event: &serenity::FullEvent,
@@ -64,6 +87,9 @@ async fn event_handler(
 	data: &Data,
 ) -> Result<(), Error> {
 	match event {
+		serenity::FullEvent::CacheReady { .. } => {
+			start_ticker_task(ctx, data);
+		}
 		serenity::FullEvent::Ready { data_about_bot, .. } => {
 			info!("Logged in as {}", data_about_bot.user.name);
 		}

@@ -86,6 +86,19 @@ impl Server {
 		Ok(found_or_none)
 	}
 
+	pub async fn get_all_leet_setups(pool: &SqlitePool) -> Result<Vec<LeetSetup>> {
+		let found_or_none = sqlx::query_as!(
+			LeetSetup,
+			r#"
+			SELECT *
+			FROM leet_setups
+			"#
+		)
+		.fetch_all(pool)
+		.await?;
+		Ok(found_or_none)
+	}
+
 	pub async fn setup_leet(
 		&self,
 		pool: &SqlitePool,
