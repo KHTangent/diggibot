@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n\t\t\tINSERT INTO servers(guild_id)\n\t\t\tVALUES (?)\n\t\t\tRETURNING guild_id\n\t\t\t",
+  "describe": {
+    "columns": [
+      {
+        "name": "guild_id",
+        "ordinal": 0,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "b123f240bc3de24cf71124b8034778c770680712320274f7454f68a749514e9f"
+}

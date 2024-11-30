@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n\t\t\tSELECT guild_id\n\t\t\tFROM servers\n\t\t\tWHERE guild_id = ?\n\t\t\t",
+  "describe": {
+    "columns": [
+      {
+        "name": "guild_id",
+        "ordinal": 0,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "e5ed2caab3de7a304711ef0ad624a6f79df4d9128e829ce8238af76c43cf9871"
+}

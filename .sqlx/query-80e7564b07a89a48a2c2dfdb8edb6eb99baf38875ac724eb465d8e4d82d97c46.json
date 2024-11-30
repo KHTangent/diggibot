@@ -1,0 +1,44 @@
+{
+  "db_name": "SQLite",
+  "query": "\n\t\t\tSELECT *\n\t\t\tFROM leets\n\t\t\tWHERE guild_id = ? AND user_id = ? AND day = ? AND month = ? AND year = ?\n\t\t\t",
+  "describe": {
+    "columns": [
+      {
+        "name": "guild_id",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "user_id",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "day",
+        "ordinal": 2,
+        "type_info": "Integer"
+      },
+      {
+        "name": "month",
+        "ordinal": 3,
+        "type_info": "Integer"
+      },
+      {
+        "name": "year",
+        "ordinal": 4,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "80e7564b07a89a48a2c2dfdb8edb6eb99baf38875ac724eb465d8e4d82d97c46"
+}

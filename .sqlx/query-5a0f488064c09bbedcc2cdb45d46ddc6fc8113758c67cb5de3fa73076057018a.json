@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n\t\t\tINSERT INTO leets(guild_id, user_id, day, month, year)\n\t\t\tVALUES (?, ?, ?, ?, ?)\n\t\t\t",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "5a0f488064c09bbedcc2cdb45d46ddc6fc8113758c67cb5de3fa73076057018a"
+}

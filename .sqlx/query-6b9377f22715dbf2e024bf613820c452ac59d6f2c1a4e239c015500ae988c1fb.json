@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "\n\t\t\tSELECT user_id, COUNT(*) as count\n\t\t\tFROM leets\n\t\t\tWHERE guild_id = ? AND month = ? AND year = ?\n\t\t\tGROUP BY user_id\n\t\t\tORDER BY count DESC\n\t\t\t",
+  "describe": {
+    "columns": [
+      {
+        "name": "user_id",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "count",
+        "ordinal": 1,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "6b9377f22715dbf2e024bf613820c452ac59d6f2c1a4e239c015500ae988c1fb"
+}

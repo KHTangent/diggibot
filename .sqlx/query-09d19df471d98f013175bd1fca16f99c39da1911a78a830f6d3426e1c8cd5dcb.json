@@ -1,0 +1,56 @@
+{
+  "db_name": "SQLite",
+  "query": "\n\t\t\tSELECT *\n\t\t\tFROM leet_setups\n\t\t\tWHERE guild_id = ?\n\t\t\t",
+  "describe": {
+    "columns": [
+      {
+        "name": "guild_id",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "timezone",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "leaderboard_channel",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "leaderboard_count",
+        "ordinal": 3,
+        "type_info": "Integer"
+      },
+      {
+        "name": "accept_emoji",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "deny_emoji",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "repeat_emoji",
+        "ordinal": 6,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "09d19df471d98f013175bd1fca16f99c39da1911a78a830f6d3426e1c8cd5dcb"
+}

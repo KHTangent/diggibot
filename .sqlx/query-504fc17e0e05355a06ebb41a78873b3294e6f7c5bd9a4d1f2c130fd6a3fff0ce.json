@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n\t\t\tINSERT INTO leet_setups(\n\t\t\t\tguild_id,\n\t\t\t\ttimezone,\n\t\t\t\tleaderboard_channel,\n\t\t\t\tleaderboard_count,\n\t\t\t\taccept_emoji,\n\t\t\t\tdeny_emoji,\n\t\t\t\trepeat_emoji\n\t\t\t) VALUES (?, ?, ?, ?, ?, ?, ?)\n\t\t\t",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 7
+    },
+    "nullable": []
+  },
+  "hash": "504fc17e0e05355a06ebb41a78873b3294e6f7c5bd9a4d1f2c130fd6a3fff0ce"
+}
